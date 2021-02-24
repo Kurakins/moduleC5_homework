@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Task 5</title>
+</head>
+<body>
+
+Номер страницы: <input type="text" id="page"><br><br>
+Лимит: <input type="text" id="limit"><br><br>
+<button type="button">ЗАПРОС</button><br><br>
+
+<div id="output"></div>
+
+<script>
+
+begin();
+
+function begin() {
+  let images = get_saved_images();
+  if (images) {
+    console.log(images);
+    show_images(images);
+  }
+}
+
+function save_images(images) {
+  window.localStorage.setItem('images', JSON.stringify(images));
+}
+
+function get_saved_images() {
+  return JSON.parse(window.localStorage.getItem('images'));
+}
+
+function show_images(images) {
+  let out = document.getElementById('output');
+  let html = '';
+  for (let i = 0; i < images.length; i++) {
+    let image = images[i];
+    let src = image.download_url;
+    html += '<img src="' + encodeURI(src) + '" width="500" height="150">';
+  }
+  out.innerHTML = html;
+}
+
+async function fetch_save_and_show(page, limit) {
+  let url = 'https://picsum.photos/v2/list?page=' + page + '&limit=' + limit;
+  fetch(url)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('HTTP error ' + response.status);
+    }
+    response.json().then(function(data){
+      save_images(data);
+      show_images(data);
+    });
+  });
+}
+
+document.getElementsByTagName('button')[0].addEventListener('click', function(){
+  let out = document.getElementById('output');
+  let pageStr = document.getElementById('page').value + '';
+  let page = parseInt(pageStr);
+  let limitStr = document.getElementById('limit').value + '';
+  let limit = parseInt(limitStr);
+
+  let limitOk = limitStr === limit + '' && 1 <= limit && limit <= 10;
+  let pageOk = pageStr === page + '' && 1 <= page && page <= 10;
+  if (!limitOk && !pageOk) {
+    out.innerHTML = 'Номер страницы и лимит вне диапазона от 1 до 10.';
+  } else if (!limitOk) {
+    out.innerHTML = 'Лимит вне диапазона от 1 до 10.';
+  } else if (!pageOk) {
+    out.innerHTML = 'Номер страницы вне диапазона от 1 до 10.';
+  } else {
+    fetch_save_and_show(page, limit);
+  }
+});
+
+</script>
+</body>
+</html>
